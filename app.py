@@ -115,6 +115,8 @@ def safe_load_media(file_path, media_type="image"):
             if media_type == "image": return Image.open(file_path)
             elif media_type == "video":
                 with open(file_path, 'rb') as f: return f.read()
+            elif media_type == "audio":
+                with open(file_path, 'rb') as f: return f.read()
     except: pass
     return None
 
@@ -137,6 +139,26 @@ def get_cached_video(file):
     if vb:
         return base64.b64encode(vb).decode()
     return None
+
+def play_music_sidebar():
+    audio_bytes = safe_load_media("music.mp3", "audio")
+    if audio_bytes:
+        audio_b64 = base64.b64encode(audio_bytes).decode()
+        return (
+            '<audio id="bgmusic" autoplay loop style="width:100%;height:35px;border-radius:10px;">'
+            '<source src="data:audio/mp3;base64,' + audio_b64 + '" type="audio/mp3">'
+            '</audio>'
+            '<script>'
+            'var m=document.getElementById("bgmusic");'
+            'if(m){'
+            '  var t=parseFloat(localStorage.getItem("mt")||"0");'
+            '  if(t>1){m.currentTime=t-1;}'
+            '  m.play().catch(function(){document.addEventListener("click",function(){m.play();},{once:true});});'
+            '  setInterval(function(){if(!m.paused){localStorage.setItem("mt",m.currentTime);}},500);'
+            '}'
+            '</script>'
+        )
+    return '<p style="font-size:11px;color:#999;">🎵 添加 music.mp3</p>'
 
 def check_password():
     if 'authenticated' not in st.session_state: st.session_state.authenticated = False
@@ -241,6 +263,9 @@ def show_main(letter):
             st.session_state.show_surprise = True; st.rerun()
     
     with st.sidebar:
+        st.markdown("### 🎵 我们的歌")
+        st.markdown(play_music_sidebar(), unsafe_allow_html=True)
+        st.markdown("---")
         if st.button("🔄 重新开始"):
             for k in ['envelope_opened','authenticated','show_surprise','floating_media','float_start_time']:
                 if k in st.session_state: del st.session_state[k]
@@ -395,6 +420,9 @@ def show_surprise():
     st.markdown('</div>', unsafe_allow_html=True)
     
     with st.sidebar:
+        st.markdown("### 🎵 我们的歌")
+        st.markdown(play_music_sidebar(), unsafe_allow_html=True)
+        st.markdown("---")
         if st.button("🏠 回到主页"):
             st.session_state.show_surprise = False
             st.session_state.envelope_opened = False
